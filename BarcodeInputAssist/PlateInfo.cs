@@ -5,26 +5,53 @@ using System.Text;
 
 namespace BarcodeInputAssist
 {
-    class PlateInfo : BindableBase
+    public class PlateInfo : BindableBase
     {
         string name;
-        bool editable;
-        Dictionary<CellPosition,string> barcodeDefinitions;
-        public PlateInfo(string plateName, bool editable = true)
+        bool wholePlate;
+
+        Dictionary<CellPosition,string> barcodeDefinitions = new Dictionary<CellPosition,string>();
+        private PlateInfo firstPlate;
+        public PlateInfo(string plateName,string assayName, bool wholePlate = false)
         {
             name = plateName;
-            this.editable = editable; 
+            PlateDescription = plateName + PlateLayoutDefFile.plateDef;
+            SampleDescription = assayName + "	tjbh HID	tjbh HID";
+            this.wholePlate = wholePlate;
+            int wellCount = wholePlate ? 96 : 48;
+            InitDefinitions(wellCount);
         }
 
-        public bool Editable 
+        public string PlateDescription { get; set; }
+        public string SampleDescription { get; set; }
+        
+        
+        private void InitDefinitions(int wellCount)
+        {
+
+            int colNum = (wellCount + 7) / 8;
+         
+            for (int c = 0; c < colNum; c++)
+            {
+                for (int r = 0; r < 8; r++)
+                {
+                    CellPosition cellPos = new CellPosition(c, r);
+                    barcodeDefinitions[cellPos] = "";
+                }
+            }
+
+          
+        }
+
+        public bool IsWholePlate 
         {
             get
             {
-                return editable;
+                return wholePlate;
             }
             set
             {
-                SetProperty(ref editable, value);
+                SetProperty(ref wholePlate, value);
             }
         }
 
@@ -46,7 +73,25 @@ namespace BarcodeInputAssist
             {
                 return barcodeDefinitions;
             }
+            set
+            {
+                barcodeDefinitions = value;
+            }
         }
 
+
+        public void CopyFrom(PlateInfo srcPlate, bool copy2FirstHalf)
+        {
+            for(int i = 0; i<48;i++)
+            {
+                CellPosition srcCellPos = new CellPosition(i);
+                CellPosition dstCellPos = copy2FirstHalf ? srcCellPos : new CellPosition(i + 48);
+
+                if(srcPlate.BarcodeDefinitions.ContainsKey(srcCellPos))
+                {
+                    barcodeDefinitions[dstCellPos] = srcPlate.BarcodeDefinitions[srcCellPos];
+                }
+            }
+        }
     }
 }

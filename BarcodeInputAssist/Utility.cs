@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +21,25 @@ namespace BarcodeInputAssist
                 cell.Value = barcode;
             }
         }
+
+
+        static public void SaveDataGridView(DataGridView dataGridView, PlateInfo curPlateInfo)
+        {
+            if (curPlateInfo == null)
+                return;
+
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                foreach (DataGridViewCell cell in row.Cells)
+                {
+                    CellPosition cellPos = new CellPosition(cell.ColumnIndex, cell.RowIndex);
+                    string sBarcode = cell.Value.ToString();
+                    curPlateInfo.BarcodeDefinitions[cellPos] = sBarcode;
+                }
+            }
+           
+        }
+
 
         static public void InitDataGridView(DataGridView dataGridView, int sampleCount)
         {
@@ -42,6 +63,16 @@ namespace BarcodeInputAssist
                 dataGridView.Rows[i].HeaderCell.Value = string.Format("{0}", (char)(i + 'A'));
             }
         }
+
+        internal static string GetSaveFolder()
+        {
+            string sWorkingFolder = ConfigurationManager.AppSettings["workingFolder"];
+            
+            string sSaveFolder =  sWorkingFolder + "\\" + DateTime.Now.ToString("yyyyMMdd");
+            if (!Directory.Exists(sSaveFolder))
+                Directory.CreateDirectory(sSaveFolder);
+            return sSaveFolder + "\\";
+        }
     }
 
     public struct CellPosition
@@ -54,15 +85,37 @@ namespace BarcodeInputAssist
             rowIndex = iy;
         }
 
+        public int WellID
+        {
+            get
+            {
+                return colIndex * 8 + rowIndex + 1;
+            }
+        }
         public CellPosition(int wellIndex)
         {
-            colIndex = wellIndex / 16;
-            rowIndex = wellIndex - 16 * colIndex;
+            colIndex = wellIndex / 8;
+            rowIndex = wellIndex - 8 * colIndex;
+        }
+
+        public CellPosition(string well)
+        {
+            // TODO: Complete member initialization
+            rowIndex = well.First() - 'A';
+            colIndex = int.Parse(well.Substring(1)) - 1;
+        }
+
+        public string AlphaInteger
+        {
+            get
+            {
+                return string.Format("{0}{1:D2}", (char)('A' + rowIndex), colIndex + 1);
+            }
         }
 
         static public string GetDescription(CellPosition cellPosition)
         {
-            return string.Format("[条{0}行{1}]", 1l + cellPosition.colIndex, cellPosition.rowIndex + 1);
+            return string.Format("[条{0}行{1}]",  cellPosition.colIndex + 1, cellPosition.rowIndex + 1);
         }
     }
 }

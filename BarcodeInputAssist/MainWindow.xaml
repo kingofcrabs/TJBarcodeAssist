@@ -3,41 +3,81 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:wfi = "clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
         xmlns:wf ="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms" 
-        xmlns:src="clr-namespace:BarcodeInputAssist"
-        Title="BarcodeAssist" Height="500" Width="1200">
+        xmlns:src="clr-namespace:BarcodeInputAssist" WindowStartupLocation="CenterScreen"
+        Title="BarcodeAssist" Height="700" Width="1000" WindowState="Minimized">
     <Grid>
         <Grid.Resources>
-            <src:BoolColorConverter x:Key="colorConverter"/>
+            <src:String2ColorConverter x:Key="s2c"/>
         </Grid.Resources>
-
         <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="3*"/>
-
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="1.8*"/>
-
         </Grid.ColumnDefinitions>
-        <Label Content="板名：" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <ListBox Margin="2,0,1,2"  Grid.Row="1" HorizontalAlignment="Stretch" Name="lstboxPlates" 
+
+        <StackPanel Orientation="Horizontal" Grid.ColumnSpan="3">
+            <Button Name="btnAddPlate" Click="btnAddPlate_Click"  ToolTip="创建新板子.">
+                <StackPanel Orientation="Vertical">
+                    <Image Source="/Images/add.jpg" Height="55" />
+                    <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">添加</TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Name="btnOpen" Click="btnOpen_Click"  ToolTip="打开定义文件.">
+                <StackPanel Orientation="Vertical" >
+                    <Image Source="/Images/open.jpg"  Height="55"/>
+                    <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">打开</TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Name="btnMerge" Click="btnMerge_Click"  ToolTip="合并两个已有板子.">
+                <StackPanel Orientation="Vertical" >
+                    <Image Source="/Images/merge.png"  Height="55"/>
+                    <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">合并</TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Name="btnSave" Click="btnSave_Click" ToolTip="保持到文件.">
+                <StackPanel Orientation="Vertical" >
+                    <Image Source="/Images/save.jpg"  Height="55"/>
+                    <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">保存</TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Name="btnPrint" Click="btnPrint_Click" ToolTip="打印选中的板子.">
+                <StackPanel Orientation="Vertical" >
+                    <Image Source="/Images/Print.png"  Height="55"/>
+                    <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">打印</TextBlock>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <Label Grid.Row="1" Content="板名：" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <ListBox Margin="2,0,1,2"  Grid.Row="2" HorizontalAlignment="Stretch" Name="lstboxPlates" 
                  VerticalAlignment="Stretch"
                  SelectionChanged="lstboxPlates_SelectionChanged"   >
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
-                    <Setter Property="IsEnabled" Value="{Binding IsReadOnly}"/>
+                    <Setter Property="Background" Value="{Binding SampleDescription,Converter={StaticResource s2c}}"/>
                 </Style>
             </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Path=Name}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
         </ListBox>
-        <Label Content="具体定义：" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1"/>
-        <Grid Grid.Column="1" Grid.Row="1">
+        <Label Content="具体定义：" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1"/>
+        <Grid Grid.Column="1" Grid.Row="2">
             <wfi:WindowsFormsHost>
                 <wf:DataGridView x:Name="dataGridView" AllowUserToAddRows="False"  AllowUserToResizeRows="False" AllowUserToResizeColumns="True"/>
             </wfi:WindowsFormsHost>
         </Grid>
-        <Label Content="日志：" HorizontalAlignment="Left" Margin="0,3,0,0" VerticalAlignment="Top" Grid.Column="2"/>
+        <Label Grid.Row="1" Content="日志：" HorizontalAlignment="Left" Margin="0,3,0,0" VerticalAlignment="Top" Grid.Column="2"/>
+        <TextBox FontSize="12" Grid.Row="2" Grid.Column="2" Name="txtLog" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextWrapping="Wrap" Text="" Margin="5,0,5,10" Grid.RowSpan="2"/>
+        <Label Grid.Row="3" Content="提示：" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,10,0,0"/>
+        <TextBox HorizontalAlignment="Left" Name="txtHint" Height="86" Margin="10,44,0,0" Grid.Row="3" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="743" Grid.ColumnSpan="2"/>
+
     </Grid>
 </Window>
