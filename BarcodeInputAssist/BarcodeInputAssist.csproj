@@ -60,6 +60,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="HelpForm.xaml.cs">
+      <DependentUpon>HelpForm.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MergeForm.xaml.cs">
       <DependentUpon>MergeForm.xaml</DependentUpon>
     </Compile>
@@ -69,6 +72,10 @@
     </Compile>
     <Compile Include="TraceListener.cs" />
     <Compile Include="Utility.cs" />
+    <Page Include="HelpForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

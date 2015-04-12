@@ -120,4 +120,7 @@
   <data name="merged" xml:space="preserve">
     <value>merged</value>
   </data>
+  <data name="version" xml:space="preserve">
+    <value>0.01</value>
+  </data>
 </root>

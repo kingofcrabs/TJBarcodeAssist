@@ -5,7 +5,11 @@
         xmlns:wf ="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms" 
         xmlns:src="clr-namespace:BarcodeInputAssist" WindowStartupLocation="CenterScreen"
         Title="BarcodeAssist" Height="700" Width="1000" WindowState="Minimized">
+    <Window.CommandBindings>
+        <CommandBinding Command="Help" Executed="CommandHelp_Executed" CanExecute="CommandHelp_CanExecute"/>
+    </Window.CommandBindings>
     <Grid>
+ 
         <Grid.Resources>
             <src:String2ColorConverter x:Key="s2c"/>
         </Grid.Resources>
@@ -20,7 +24,11 @@
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="1.8*"/>
         </Grid.ColumnDefinitions>
-
+        <Menu Height="24" Grid.Column="2" HorizontalAlignment="Right" Name="menu1"  VerticalAlignment="Top" Width="48" Margin="0,1,0,0">
+            <MenuItem Header="帮助" FontFamily="SimSun" FontSize="16" >
+                <MenuItem Header="关于" Command="Help"/>
+            </MenuItem>
+        </Menu>
         <StackPanel Orientation="Horizontal" Grid.ColumnSpan="3">
             <Button Name="btnAddPlate" Click="btnAddPlate_Click"  ToolTip="创建新板子.">
                 <StackPanel Orientation="Vertical">

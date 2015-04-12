@@ -67,7 +67,7 @@ namespace BarcodeInputAssist
 
             string assayName = firstPlate.SampleDescription.Split('\t').First();
             MergedPlate = new PlateInfo(firstPlate.Name + "_" + secondPlate.Name, assayName, true);
-            MergedPlate.PlateDescription = firstPlate.PlateDescription;
+           
             MergedPlate.CopyFrom(firstPlate, true);
             MergedPlate.CopyFrom(secondPlate, false);
             this.DialogResult = true;

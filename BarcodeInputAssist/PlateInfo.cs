@@ -11,11 +11,11 @@ namespace BarcodeInputAssist
         bool wholePlate;
 
         Dictionary<CellPosition,string> barcodeDefinitions = new Dictionary<CellPosition,string>();
-        private PlateInfo firstPlate;
         public PlateInfo(string plateName,string assayName, bool wholePlate = false)
         {
             name = plateName;
-            PlateDescription = plateName + PlateLayoutDefFile.plateDef;
+            string merged = wholePlate ? "\t\tmerged" : "";
+            PlateDescription = plateName + PlateLayoutDefFile.plateDef + merged;
             SampleDescription = assayName + "	tjbh HID	tjbh HID";
             this.wholePlate = wholePlate;
             int wellCount = wholePlate ? 96 : 48;
@@ -39,8 +39,6 @@ namespace BarcodeInputAssist
                     barcodeDefinitions[cellPos] = "";
                 }
             }
-
-          
         }
 
         public bool IsWholePlate 

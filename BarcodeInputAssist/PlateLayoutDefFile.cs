@@ -96,7 +96,7 @@ namespace BarcodeInputAssist
         {
             List<string> allLines = new List<string>();
             allLines.AddRange(fileHeader);
-            allLines.Add(plateInfo.Name + plateDef);
+            allLines.Add(plateInfo.PlateDescription);
             allLines.Add(sampleHeader);
             plateInfo.BarcodeDefinitions = plateInfo.BarcodeDefinitions.OrderBy(x => Convert(x.Key)).ToDictionary(x=>x.Key,x=>x.Value);
             bool bOnlyExist = plateInfo.SampleDescription.Contains("YF_POP4_xl");

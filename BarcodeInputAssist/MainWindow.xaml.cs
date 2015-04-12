@@ -367,6 +367,19 @@ namespace BarcodeInputAssist
         }
 
         #endregion
+
+        #region help
+        private void CommandHelp_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            HelpForm help = new HelpForm();
+            help.ShowDialog();
+        }
+
+        private void CommandHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+        #endregion
     }
 
 

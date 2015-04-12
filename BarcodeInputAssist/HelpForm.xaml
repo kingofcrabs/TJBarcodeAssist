@@ -1,0 +1,9 @@
+﻿<Window x:Class="BarcodeInputAssist.HelpForm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="关于" Height="145" Width="404">
+    <Grid>
+        <Label  Content="© 2014-2015，盈开生物科技" Height="32" HorizontalAlignment="Left" Margin="21,62,0,0" Name="label1" VerticalAlignment="Top" Width="327" />
+        <Label  Content="" Height="29" HorizontalAlignment="Left" Margin="21,27,0,0" Name="lblDescription" VerticalAlignment="Top" Width="349" />
+    </Grid>
+</Window>

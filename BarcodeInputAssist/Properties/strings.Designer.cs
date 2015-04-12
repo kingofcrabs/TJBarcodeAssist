@@ -68,5 +68,14 @@ namespace BarcodeInputAssist.Properties {
                 return ResourceManager.GetString("merged", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查找类似 0.01 的本地化字符串。
+        /// </summary>
+        internal static string version {
+            get {
+                return ResourceManager.GetString("version", resourceCulture);
+            }
+        }
     }
 }
