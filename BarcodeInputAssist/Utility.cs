@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -7,10 +8,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
 namespace BarcodeInputAssist
 {
     class Utility
     {
+
+        
         static public void UpdateDataGridView(DataGridView dataGridView, PlateInfo plateInfo)
         {
             foreach (KeyValuePair<CellPosition, string> pair in plateInfo.BarcodeDefinitions)
@@ -21,7 +25,6 @@ namespace BarcodeInputAssist
                 cell.Value = barcode;
             }
         }
-
 
         static public void SaveDataGridView(DataGridView dataGridView, PlateInfo curPlateInfo)
         {
@@ -37,7 +40,7 @@ namespace BarcodeInputAssist
                     curPlateInfo.BarcodeDefinitions[cellPos] = sBarcode;
                 }
             }
-           
+
         }
 
 
@@ -46,17 +49,27 @@ namespace BarcodeInputAssist
             dataGridView.Columns.Clear();
             List<string> strs = new List<string>();
 
-            int colNum = (sampleCount + 7) / 8;
-            for (int j = 0; j < colNum; j++)
+            int editableColNum = (sampleCount + 7) / 8;
+            const int totalColNum = 12;
+            for (int j = 0; j < totalColNum; j++)
                 strs.Add("");
-            for (int i = 0; i < colNum; i++)
+            for (int i = 0; i < totalColNum; i++)
             {
                 DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn();
                 column.HeaderText = string.Format("{0}", 1 + i);
                 dataGridView.Columns.Add(column);
                 dataGridView.Columns[i].SortMode = DataGridViewColumnSortMode.Programmatic;
+                if (i >= editableColNum)
+                {
+                    dataGridView.Columns[i].ReadOnly = true;
+                    dataGridView.Columns[i].DefaultCellStyle.BackColor = System.Drawing.Color.LightGray;
+                    dataGridView.Columns[i].DefaultCellStyle.ForeColor = System.Drawing.Color.DarkGray;
+                    dataGridView.Columns[i].DefaultCellStyle.SelectionBackColor = System.Drawing.Color.LightGray;
+                    dataGridView.Columns[i].DefaultCellStyle.SelectionForeColor = System.Drawing.Color.DarkGray;
+
+                }
             }
-            
+
             for (int i = 0; i < 8; i++)
             {
                 dataGridView.Rows.Add(strs.ToArray());
@@ -67,14 +80,23 @@ namespace BarcodeInputAssist
         internal static string GetSaveFolder()
         {
             string sWorkingFolder = ConfigurationManager.AppSettings["workingFolder"];
-            
-            string sSaveFolder =  sWorkingFolder + "\\" + DateTime.Now.ToString("yyyyMMdd");
+
+            string sSaveFolder = sWorkingFolder + "\\" + DateTime.Now.ToString("yyyyMMdd");
             if (!Directory.Exists(sSaveFolder))
                 Directory.CreateDirectory(sSaveFolder);
             return sSaveFolder + "\\";
         }
-    }
 
+
+        public static int CellYUnit
+        {
+            get
+            {
+                string yUnit = ConfigurationManager.AppSettings["PrintYUnit"];
+                return int.Parse(yUnit);
+            }
+        }
+    }
     public struct CellPosition
     {
         public int colIndex;

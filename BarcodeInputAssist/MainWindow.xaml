@@ -4,12 +4,12 @@
         xmlns:wfi = "clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
         xmlns:wf ="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms" 
         xmlns:src="clr-namespace:BarcodeInputAssist" WindowStartupLocation="CenterScreen"
-        Title="BarcodeAssist" Height="700" Width="1000" WindowState="Minimized">
+        Title="BarcodeAssist" Height="800" Width="1000" WindowState="Minimized">
     <Window.CommandBindings>
         <CommandBinding Command="Help" Executed="CommandHelp_Executed" CanExecute="CommandHelp_CanExecute"/>
     </Window.CommandBindings>
-    <Grid>
- 
+    <Grid Name="mainGrid">
+
         <Grid.Resources>
             <src:String2ColorConverter x:Key="s2c"/>
         </Grid.Resources>
@@ -17,12 +17,13 @@
             <RowDefinition Height="80"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="3*"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="1.6*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="5*"/>
-            <ColumnDefinition Width="1.8*"/>
+            <ColumnDefinition Width="220"/>
         </Grid.ColumnDefinitions>
         <Menu Height="24" Grid.Column="2" HorizontalAlignment="Right" Name="menu1"  VerticalAlignment="Top" Width="48" Margin="0,1,0,0">
             <MenuItem Header="帮助" FontFamily="SimSun" FontSize="16" >
@@ -60,9 +61,26 @@
                     <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">打印</TextBlock>
                 </StackPanel>
             </Button>
+            <GroupBox Header="阳性别名" FontSize="16" FontFamily="SimHei">
+                <ComboBox Name="cmbboxPositive" ItemsSource="{Binding}" Height="30">
+
+                </ComboBox>
+            </GroupBox>
+            <GroupBox  Header="阴性别名" FontSize="16" FontFamily="SimHei">
+                <ComboBox Name="cmbboxNegative" ItemsSource="{Binding}" Height="30">
+
+                </ComboBox>
+            </GroupBox>
+            <GroupBox Header="样品连续性" FontSize="16" FontFamily="SimHei">
+                <StackPanel Orientation="Vertical">
+                    <RadioButton Name="rdbMust" Margin="5,5,0,0" Content="必须" IsChecked="True" FontSize="16" FontFamily="SimSong"/>
+                    <RadioButton Margin="5,5,0,0" Content="可以不" FontSize="16" FontFamily="SimSong"/>
+                </StackPanel>
+            </GroupBox>
+
         </StackPanel>
-        <Label Grid.Row="1" Content="板名：" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <ListBox Margin="2,0,1,2"  Grid.Row="2" HorizontalAlignment="Stretch" Name="lstboxPlates" 
+        <Label Grid.Row="1" Content="板名：" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="58"/>
+        <ListBox Margin="2,0,1,0"  Grid.Row="2" HorizontalAlignment="Stretch" Name="lstboxPlates" 
                  VerticalAlignment="Stretch"
                  SelectionChanged="lstboxPlates_SelectionChanged"   >
             <ListBox.ItemContainerStyle>
@@ -76,16 +94,42 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Label Content="具体定义：" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1"/>
-        <Grid Grid.Column="1" Grid.Row="2">
+        <Label FontFamily="Arial" Grid.Row="3" Content="Assay:" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="70"/>
+        <ListBox Margin="2,30,1,0"  Grid.Row="3" HorizontalAlignment="Stretch" Name="lstAssays"  SelectionChanged="lstAssays_SelectionChanged"
+                 VerticalAlignment="Stretch" ItemsSource="{Binding}"/>
+        <Label Content="具体定义：" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Height="28" Width="90"/>
+        <Grid Grid.Column="1" Grid.Row="2" Grid.RowSpan="2">
             <wfi:WindowsFormsHost>
                 <wf:DataGridView x:Name="dataGridView" AllowUserToAddRows="False"  AllowUserToResizeRows="False" AllowUserToResizeColumns="True"/>
             </wfi:WindowsFormsHost>
         </Grid>
-        <Label Grid.Row="1" Content="日志：" HorizontalAlignment="Left" Margin="0,3,0,0" VerticalAlignment="Top" Grid.Column="2"/>
-        <TextBox FontSize="12" Grid.Row="2" Grid.Column="2" Name="txtLog" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" TextWrapping="Wrap" Text="" Margin="5,0,5,10" Grid.RowSpan="2"/>
-        <Label Grid.Row="3" Content="提示：" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,10,0,0"/>
-        <TextBox HorizontalAlignment="Left" Name="txtHint" Height="86" Margin="10,44,0,0" Grid.Row="3" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="743" Grid.ColumnSpan="2"/>
+        <Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="5" Name="gridLog">
+            <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="1.6*"/>
+            </Grid.RowDefinitions>
+            <Label Content="条码设置:" Grid.Row ="1"/>
+            <StackPanel Name="approach1"  Grid.Row="2" Margin="0,5,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                        <Label Content="条码前缀:"/>
+                        <TextBox Name="txtStartBarcodeApproach1" Width="120"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
+                        <Label Content="数量:    "/>
+                        <TextBox Name="txtCount" Width="120"/>
+                    </StackPanel>
+                    <Button x:Name="btnSetBarcode" HorizontalAlignment="Stretch" Margin="85,0,20,0" Click="btnSetBarcode_Click" Content="设置" Height="30"/>
 
+                </StackPanel>
+            </StackPanel>
+            <Label Name="lblLog" Content="日志:" Grid.Row="3"/>
+            <TextBox Margin="5,30,0,0" Name ="txtLog" Grid.Row="3"/>
+        </Grid>
+        <Label Grid.Row="4" Content="提示：" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="58"/>
+        <TextBox HorizontalAlignment="Stretch" Name="txtHint"  Margin="8,31,3,4" Grid.Row="4" TextWrapping="Wrap" Text="" VerticalAlignment="Stretch" Grid.ColumnSpan="2"/>
     </Grid>
 </Window>

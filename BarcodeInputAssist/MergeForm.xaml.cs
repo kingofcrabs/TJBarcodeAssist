@@ -48,8 +48,8 @@ namespace BarcodeInputAssist
             if(firstPlate.SampleDescription != secondPlate.SampleDescription)
             {
                 SetHint("两块板的Assay类型不一样,您可以通过颜色区分。");
+                return;
             }
-
 
             bool containsValSecondHalf = SecondHalfContainsValue(firstPlate);
             if(containsValSecondHalf)
@@ -94,8 +94,6 @@ namespace BarcodeInputAssist
             txtHint.Content = s;
             txtHint.Foreground = new SolidColorBrush(Colors.Red);
         }
-
-       
 
         private void btnAddPlate2_Click(object sender, RoutedEventArgs e)
         {

@@ -38,18 +38,75 @@ namespace BarcodeInputAssist
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
             this.KeyUp += MainWindow_KeyUp;
+            dataGridView.CellValidated += dataGridView_CellValidated;
+            LoadAlisNames();
+            LoadAssays();
+            mainGrid.Background = new SolidColorBrush(Colors.LightGreen);
+            mainGrid.Background.Opacity = 0.3;
+            dataGridView.SelectionChanged += dataGridView_SelectionChanged;
+            ShowLog(ConfigurationManager.AppSettings["showLog"]);
          }
 
+        private void LoadAssays()
+        {
+            string sConfigFolder = FolderHelper.GetConfigFolder();
+            string assaysFile = sConfigFolder + "\\assays.txt";
+            var assays = File.ReadAllLines(assaysFile).ToList();
+            lstAssays.ItemsSource = assays;
+            lstAssays.SelectedIndex = 0;
+        }
+        private void LoadAlisNames()
+        {
+            string sConfigFolder = FolderHelper.GetConfigFolder();
+            string sPosConfig = sConfigFolder + "\\positive.txt";
+            string sNegConfig = sConfigFolder + "\\negative.txt";
+            var negFiles = File.ReadAllLines(sNegConfig).ToList();
+            var posFiles = File.ReadAllLines(sPosConfig).ToList();
+            cmbboxNegative.ItemsSource = negFiles;
+            cmbboxPositive.ItemsSource = posFiles;
+            cmbboxNegative.SelectedIndex = 0;
+            cmbboxPositive.SelectedIndex = 0;
+        }
+
+        void dataGridView_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dataGridView.SelectedCells.Count == 0 || lstAssays.SelectedIndex == -1)
+                return;
+            SetSelectedCell2CurrentAssay();
+            //dataGridView.ClearSelection();
+        }
+
+        private void SetSelectedCell2CurrentAssay()
+        {
+            string assayName = (string)lstAssays.SelectedItem;
+            foreach (DataGridViewCell cell in dataGridView.SelectedCells)
+            {
+                cell.Value = assayName;
+            }
+        }
+
+        private void ShowLog(string s)
+        {
+            bool bShow = bool.Parse(s);
+            var visible = bShow ? Visibility.Visible : Visibility.Hidden;
+            txtLog.Visibility = visible;
+            lblLog.Visibility = visible;
+        }
+
+        private void lstAssays_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            dataGridView.ClearSelection();
+        }
 
         //move to the next cell user wants
         void MainWindow_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if(e.Key == Key.Enter && dataGridView.Focused)
+            if (e.Key == Key.Enter && dataGridView.Focused)
             {
-                if(dataGridView.CurrentCell.RowIndex == 7)
+                if (dataGridView.CurrentCell.RowIndex == 7)
                 {
                     int rowIndex = 0;
-                    int colIndex = dataGridView.CurrentCell.ColumnIndex+1;
+                    int colIndex = dataGridView.CurrentCell.ColumnIndex + 1;
                     colIndex = Math.Min(dataGridView.Columns.Count - 1, colIndex);
                     dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[colIndex];
                 }
@@ -89,8 +146,7 @@ namespace BarcodeInputAssist
 
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            this.Visibility = System.Windows.Visibility.Hidden;
-            this.InvalidateVisual();
+            this.WindowState = System.Windows.WindowState.Minimized;
             System.Threading.Thread.Sleep(100);
             this.Visibility = System.Windows.Visibility.Visible;
             this.WindowState = System.Windows.WindowState.Normal;
@@ -99,6 +155,16 @@ namespace BarcodeInputAssist
             AddTracer();
         }
 
+        void dataGridView_CellValidated(object sender, DataGridViewCellEventArgs e)
+        {
+            var cell = dataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            Dictionary<string, string> map = new Dictionary<string, string>();
+            map.Add("+", (string)cmbboxPositive.SelectedItem);
+            map.Add("-", (string)cmbboxNegative.SelectedItem);
+            string cellVal = cell.FormattedValue.ToString();
+            if (map.ContainsKey(cellVal))
+                cell.Value = map[cellVal];
+        }
 
 
         private void SetHint(string s)
@@ -110,7 +176,8 @@ namespace BarcodeInputAssist
    
         private void lstboxPlates_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            
+            lstAssays.SelectedIndex = -1;
+            dataGridView.ClearSelection();
             Utility.SaveDataGridView(dataGridView, curPlateInfo);
             curPlateInfo = (PlateInfo)lstboxPlates.SelectedItem;
             Utility.InitDataGridView(dataGridView, curPlateInfo.BarcodeDefinitions.Count);
@@ -203,12 +270,70 @@ namespace BarcodeInputAssist
         {
             MergePlates();
         }
+   
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+            Trace.WriteLine("Save.");
+            SetHint("");
+            Utility.SaveDataGridView(dataGridView, curPlateInfo);
+            if ((bool)rdbMust.IsChecked)
+            {
+                string errMsg = "";
+                bool bSeq = CheckPlatesSequential(ref errMsg);
+                if(!bSeq)
+                {
+                    SetHint(errMsg);
+                    return;
+                }
+            }
+            try
+            {
+                WriteAllPlates2File();
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine(ex.Message);
+                SetHint(ex.Message);
+            }
+        }
 
-    
+        private bool CheckPlatesSequential(ref string errMsg)
+        {
+            bool bSeq = true;
+            foreach (var plateInfo in plates)
+            {
+               bSeq = CheckSinglePlateSequential(plateInfo, ref errMsg);
+               if (!bSeq)
+                   break;
+            }
+            return bSeq;
+        }
+
+        private bool CheckSinglePlateSequential(PlateInfo plateInfo, ref string errMsg)
+        {
+            //var cellPositions = plateInfo.BarcodeDefinitions.Keys.ToList();
+            var cellPositions = plateInfo.BarcodeDefinitions.Where(x => x.Value != "").Select(x => x.Key).ToList();
+            var wellIDs = cellPositions.Select(x => x.WellID);
+            HashSet<int> allIDs = new HashSet<int>(wellIDs);
+            int minWellID = wellIDs.Min();
+            int maxWellID = wellIDs.Max();
+            for(int id = minWellID; id < maxWellID; id++)
+            {
+                if(!allIDs.Contains(id))
+                {
+                    errMsg = string.Format("位于{0}处的样品缺失！", new CellPosition(id - 1).AlphaInteger);
+                    return false;
+                }
+            }
+            return true;
+        }
+        #endregion
+
+        #region print
         private void btnPrint_Click(object sender, RoutedEventArgs e)
         {
             SetHint("");
-            if(curPlateInfo == null)
+            if (curPlateInfo == null)
             {
                 SetHint("没有板子被选中！");
                 return;
@@ -251,7 +376,7 @@ namespace BarcodeInputAssist
             wb.Unlock();
             return sFile;
         }
-        static readonly int yUnit = 80;
+        static readonly int yUnit = Utility.CellYUnit;
         static readonly int border = 50;
 
         private void DrawEverything(System.Drawing.Graphics g)
@@ -272,7 +397,7 @@ namespace BarcodeInputAssist
                     CellPosition cellPos = new CellPosition(x, y);
                     if (curPlateInfo.BarcodeDefinitions[cellPos] == "")
                         continue;
-                    
+
                     float startX = (float)(x * xUint + border);
                     float startY = (float)((y + 0.5) * yUnit + border);
 
@@ -280,7 +405,7 @@ namespace BarcodeInputAssist
                     System.Drawing.PointF startPt = new System.Drawing.PointF(startX, (float)(startY + yUnit * 0.1));
                     g.DrawString(content,
                         font1, System.Drawing.Brushes.Black,
-                        new System.Drawing.RectangleF(startPt,new System.Drawing.SizeF(xUint,yUnit)));
+                        new System.Drawing.RectangleF(startPt, new System.Drawing.SizeF(xUint, yUnit)));
 
                     //String, Font, Brush, RectangleF, StringFormat)
                 }
@@ -292,7 +417,7 @@ namespace BarcodeInputAssist
                 int xStart = x * xUint + border;
                 if (x < cols)
                 {
-                    g.DrawString(string.Format("{0:D2}", x +1), font1,
+                    g.DrawString(string.Format("{0:D2}", x + 1), font1,
                         System.Drawing.Brushes.Black,
                         new System.Drawing.PointF((float)xStart + xUint * 0.2f, border + yUnit * 0.2f));
                 }
@@ -304,12 +429,12 @@ namespace BarcodeInputAssist
             //横线
             for (int y = 0; y < rows + 1 + 1; y++)
             {
-                int yStart = (int)((y-0.5) * yUnit + border);
+                int yStart = (int)((y - 0.5) * yUnit + border);
                 if (y == 0)
                     yStart = border;
                 if (y >= 1 && y < rows + 1)
                 {
-                    g.DrawString(string.Format("{0}", (char)(y-1 +'A')), font1,
+                    g.DrawString(string.Format("{0}", (char)(y - 1 + 'A')), font1,
                      System.Drawing.Brushes.Black,
                      new System.Drawing.PointF(xUint * 0.2f, (float)yStart + yUnit * 0.1f));
                 }
@@ -331,24 +456,6 @@ namespace BarcodeInputAssist
             return (int)(border + 8.5 * yUnit + 10);
         }
 
-        private void btnSave_Click(object sender, RoutedEventArgs e)
-        {
-            Trace.WriteLine("Save.");
-            Utility.SaveDataGridView(dataGridView, curPlateInfo);
-            try
-            {
-                WriteAllPlates2File();
-            }
-            catch(Exception ex)
-            {
-                Trace.WriteLine(ex.Message);
-                SetHint(ex.Message);
-            }
-            
-        }
-        #endregion
-
-        #region print
         private int GetFitBMPWidth()
         {
             int cnt = GetColumnCnt();
@@ -380,6 +487,45 @@ namespace BarcodeInputAssist
             e.CanExecute = true;
         }
         #endregion
+
+        private void btnSetBarcode_Click(object sender, RoutedEventArgs e)
+        {
+            lstAssays.SelectedIndex = -1;
+            SetHint("");
+            if(dataGridView.CurrentCell == null)
+            {
+                SetHint("请先选中开始样品！");
+                return;
+            }
+
+            DataGridViewCell currentCell = dataGridView.CurrentCell;
+            int maxWellID = curPlateInfo.IsWholePlate ? 96 : 48;
+
+            int totalBarcodeCnt = 0;
+            string prefix = "";
+            GetBarcodeSetting(ref totalBarcodeCnt,ref prefix);
+
+            int curWellID = new CellPosition(currentCell.ColumnIndex, currentCell.RowIndex).WellID;
+            maxWellID = Math.Min(maxWellID, curWellID + totalBarcodeCnt);
+            for(int id = curWellID; id <= maxWellID; id++)
+            {
+                CellPosition cellPos = new CellPosition(id-1);
+                dataGridView.Rows[cellPos.rowIndex].Cells[cellPos.colIndex].Value = prefix +(id - curWellID + 1).ToString();
+            }
+        }
+
+        private void GetBarcodeSetting(ref int totalBarcodeCnt, ref string curBarcode)
+        {
+            curBarcode = txtStartBarcodeApproach1.Text; 
+            totalBarcodeCnt = int.Parse(txtCount.Text);
+           
+            var selectedCell = dataGridView.CurrentCell;
+            CellPosition curCell = new CellPosition(selectedCell.RowIndex, selectedCell.ColumnIndex);
+            Trace.WriteLine(string.Format("Start barcode = {0}, count = {1}, position = {2}",
+                            curBarcode,  totalBarcodeCnt,
+                            CellPosition.GetDescription(curCell)));
+        }
+       
     }
 
 
