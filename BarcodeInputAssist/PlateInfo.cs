@@ -11,12 +11,13 @@ namespace BarcodeInputAssist
         bool wholePlate;
 
         Dictionary<CellPosition,string> barcodeDefinitions = new Dictionary<CellPosition,string>();
-        public PlateInfo(string plateName,string assayName, bool wholePlate = false)
+        public PlateInfo(string plateName,FormattedHeader selectedFormat, bool wholePlate = false)
         {
             name = plateName;
             string merged = wholePlate ? "\t\tmerged" : "";
             PlateDescription = plateName + PlateLayoutDefFile.plateDef + merged;
-            SampleDescription = assayName + "	tjbh HID	tjbh HID";
+            if(selectedFormat != null)
+                SampleDescription = selectedFormat.Assay +"\t" + selectedFormat.ResultsGroup + "\t" + selectedFormat.FileNameConvention;
             this.wholePlate = wholePlate;
             int wellCount = wholePlate ? 96 : 48;
             InitDefinitions(wellCount);

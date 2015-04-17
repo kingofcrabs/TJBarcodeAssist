@@ -47,6 +47,7 @@ namespace BarcodeInputAssist
         static public void InitDataGridView(DataGridView dataGridView, int sampleCount)
         {
             dataGridView.Columns.Clear();
+            dataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
             List<string> strs = new List<string>();
 
             int editableColNum = (sampleCount + 7) / 8;

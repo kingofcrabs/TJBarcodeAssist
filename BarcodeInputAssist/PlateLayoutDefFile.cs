@@ -87,7 +87,7 @@ namespace BarcodeInputAssist
             {
                 bMerged = strs[7].Contains(strings.merged);
             }
-            plateInfo = new PlateInfo(plateName,"", bMerged);
+            plateInfo = new PlateInfo(plateName,null, bMerged);
             plateInfo.PlateDescription = generalInfo;
         }
 
@@ -97,12 +97,9 @@ namespace BarcodeInputAssist
             List<string> allLines = new List<string>();
             allLines.AddRange(fileHeader);
             allLines.Add(plateInfo.PlateDescription);
+            allLines.Add("");
             allLines.Add(sampleHeader);
             plateInfo.BarcodeDefinitions = plateInfo.BarcodeDefinitions.OrderBy(x => Convert(x.Key)).ToDictionary(x=>x.Key,x=>x.Value);
-            bool bOnlyExist = plateInfo.SampleDescription.Contains("YF_POP4_xl");
-            if(bOnlyExist)
-                allLines.Add("");
-
             for (int i = 0; i < 96; i++ )
             {
                 CellPosition cellPos = new CellPosition(i);
@@ -116,10 +113,11 @@ namespace BarcodeInputAssist
                         line += barcode + "\t" + plateInfo.SampleDescription + "\t" + sampleType;
                     allLines.Add(line);
                 }
-                else if(!bOnlyExist)
+                else
                 {
                     allLines.Add(cellPos.AlphaInteger);
                 }
+                
             }
             File.WriteAllLines(sFile, allLines);
         }
@@ -152,4 +150,25 @@ namespace BarcodeInputAssist
             return sampleType;
         }
     }
+
+    public class FormattedHeader
+    {
+
+        public FormattedHeader(string s, bool hasDescription = false)
+        {
+            // TODO: Complete member initialization
+            string[] strs = s.Split('\t').ToArray();
+            int startIndex = hasDescription ? 1 : 0;
+            if (hasDescription)
+                Description = strs[0];
+            Assay = strs[startIndex];
+            ResultsGroup = strs[startIndex+1];
+            FileNameConvention = strs[startIndex+1];
+        }
+        public string Description { get; set; }
+        public string Assay { get; set; }
+        public string ResultsGroup { get; set; }
+        public string FileNameConvention { get; set; }
+    }
+
 }

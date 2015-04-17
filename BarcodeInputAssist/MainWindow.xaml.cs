@@ -37,7 +37,7 @@ namespace BarcodeInputAssist
             InitializeComponent();
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
-            this.KeyUp += MainWindow_KeyUp;
+            dataGridView.KeyDown += dataGridView_KeyDown;
             dataGridView.CellValidated += dataGridView_CellValidated;
             LoadAlisNames();
             LoadAssays();
@@ -46,6 +46,21 @@ namespace BarcodeInputAssist
             dataGridView.SelectionChanged += dataGridView_SelectionChanged;
             ShowLog(ConfigurationManager.AppSettings["showLog"]);
          }
+
+        void dataGridView_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                if (dataGridView.CurrentCell.RowIndex == 7)
+                {
+                    int colIndex = dataGridView.CurrentCell.ColumnIndex + 1;
+                    colIndex = Math.Min(dataGridView.Columns.Count - 1, colIndex);
+                    dataGridView.CurrentCell = dataGridView.Rows[0].Cells[colIndex];
+                    e.Handled = true;
+                }
+                
+            }
+        }
 
         private void LoadAssays()
         {
@@ -99,18 +114,9 @@ namespace BarcodeInputAssist
         }
 
         //move to the next cell user wants
-        void MainWindow_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        void MainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == Key.Enter && dataGridView.Focused)
-            {
-                if (dataGridView.CurrentCell.RowIndex == 7)
-                {
-                    int rowIndex = 0;
-                    int colIndex = dataGridView.CurrentCell.ColumnIndex + 1;
-                    colIndex = Math.Min(dataGridView.Columns.Count - 1, colIndex);
-                    dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[colIndex];
-                }
-            }
+           
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -214,13 +220,12 @@ namespace BarcodeInputAssist
             if (!result)
                 return;
             plates.Add(mergeForm.MergedPlate);
-
+            SetHint("Merge完成。");
         }
 
 
         bool AlreadyExist(string name)
         {
-            bool exist = false;
             foreach (var plate in plates)
             {
                 if (plate.Name == name)
@@ -244,8 +249,8 @@ namespace BarcodeInputAssist
                 return;
             }
           
-            PlateInfo newPlateInfo = new PlateInfo(newPlateName, queryNameForm.AssayName);
-            Trace.WriteLine(string.Format("Create new plate：{0}, assay: {1}", newPlateName, queryNameForm.AssayName));
+            PlateInfo newPlateInfo = new PlateInfo(newPlateName, queryNameForm.SelectedFormat);
+            Trace.WriteLine(string.Format("Create new plate：{0}, assay: {1}", newPlateName, queryNameForm.SelectedFormat));
             plates.Add(newPlateInfo);
 
         }
@@ -289,12 +294,14 @@ namespace BarcodeInputAssist
             try
             {
                 WriteAllPlates2File();
+                SetHint("保存成功。");
             }
             catch(Exception ex)
             {
                 Trace.WriteLine(ex.Message);
                 SetHint(ex.Message);
             }
+            
         }
 
         private bool CheckPlatesSequential(ref string errMsg)
@@ -524,6 +531,11 @@ namespace BarcodeInputAssist
             Trace.WriteLine(string.Format("Start barcode = {0}, count = {1}, position = {2}",
                             curBarcode,  totalBarcodeCnt,
                             CellPosition.GetDescription(curCell)));
+        }
+
+        private void btnLink_Click(object sender, RoutedEventArgs e)
+        {
+
         }
        
     }

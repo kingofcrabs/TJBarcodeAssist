@@ -4,7 +4,7 @@
         xmlns:wfi = "clr-namespace:System.Windows.Forms.Integration;assembly=WindowsFormsIntegration"
         xmlns:wf ="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms" 
         xmlns:src="clr-namespace:BarcodeInputAssist" WindowStartupLocation="CenterScreen"
-        Title="BarcodeAssist" Height="800" Width="1000" WindowState="Minimized">
+        Title="BarcodeAssist" Height="800" Icon="/images/scan.jpg" Width="1000" WindowState="Minimized">
     <Window.CommandBindings>
         <CommandBinding Command="Help" Executed="CommandHelp_Executed" CanExecute="CommandHelp_CanExecute"/>
     </Window.CommandBindings>
