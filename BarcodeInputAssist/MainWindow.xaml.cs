@@ -30,8 +30,10 @@ namespace BarcodeInputAssist
         ObservableCollection<PlateInfo> plates = new ObservableCollection<PlateInfo>();
         TraceListener _textBoxListener;
         PlateInfo curPlateInfo = null;
-
-
+        static string filePath = "";
+        HeavyWork busyForm;
+        AutoResetEvent evt = new AutoResetEvent(false);
+        Dictionary<CellPosition, string> predefinedBarcodes;
         public MainWindow()
         {
             InitializeComponent();
@@ -51,16 +53,24 @@ namespace BarcodeInputAssist
         {
             if (e.KeyCode == Keys.Enter)
             {
+
+                CellPosition cellPos = new CellPosition(dataGridView.CurrentCell.ColumnIndex, dataGridView.CurrentCell.RowIndex);
+                if (!curPlateInfo.IsWholePlate)
+                {
+                    if (cellPos.WellID > 48)
+                        e.Handled = true;
+                }
                 if (dataGridView.CurrentCell.RowIndex == 7)
                 {
+                    
                     int colIndex = dataGridView.CurrentCell.ColumnIndex + 1;
                     colIndex = Math.Min(dataGridView.Columns.Count - 1, colIndex);
                     dataGridView.CurrentCell = dataGridView.Rows[0].Cells[colIndex];
                     e.Handled = true;
                 }
-                
             }
         }
+
 
         private void LoadAssays()
         {
@@ -81,6 +91,7 @@ namespace BarcodeInputAssist
             cmbboxPositive.ItemsSource = posFiles;
             cmbboxNegative.SelectedIndex = 0;
             cmbboxPositive.SelectedIndex = 0;
+            
         }
 
         void dataGridView_SelectionChanged(object sender, EventArgs e)
@@ -113,17 +124,21 @@ namespace BarcodeInputAssist
             dataGridView.ClearSelection();
         }
 
-        //move to the next cell user wants
-        void MainWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-           
-        }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            Trace.Listeners.Clear();
             Utility.SaveDataGridView(dataGridView, curPlateInfo);
-            WriteAllPlates2File();
+            bool bok = WriteAllPlates2File();
+            if (!bok)
+            {
+                if (!Keyboard.IsKeyDown(Key.LeftCtrl) && (!Keyboard.IsKeyDown(Key.RightCtrl)))
+                {
+                    e.Cancel = true;
+                    SetHint("保存到文件失败，如果您确定要关闭，请按住Ctrl键点击关闭按钮。" + txtHint.Text);
+                    return;    
+                }
+            }
+            Trace.Listeners.Clear();
         }
         private void AddTracer()
         {
@@ -133,8 +148,10 @@ namespace BarcodeInputAssist
             Trace.Listeners.Add(_textBoxListener);
         }
 
-        private void WriteAllPlates2File()
+        private bool WriteAllPlates2File()
         {
+            string errMsg = "";
+            bool allConsist = true;
             foreach(var plateInfo in plates)
             {
                 PlateLayoutDefFile layoutDefFile = new PlateLayoutDefFile();
@@ -146,8 +163,34 @@ namespace BarcodeInputAssist
                     Trace.WriteLine(string.Format("文件已经存在于{0}", dstFile));
                     //throw new Exception(string.Format("文件已经存在于{0}",dstFile));
                 }
-                layoutDefFile.Write(dstFile, plateInfo);
+                bool consist = IsConsistentWithCheckDoc(plateInfo, ref errMsg);
+                if(consist)
+                {
+                    layoutDefFile.Write(dstFile, plateInfo);
+                }
+                else
+                {
+                    allConsist = false;
+                }
             }
+            SetHint(errMsg);
+            return allConsist;
+        }
+
+        private bool IsConsistentWithCheckDoc(PlateInfo plateInfo, ref string errMsg)
+        {
+            foreach(KeyValuePair<CellPosition,string> pair in plateInfo.BarcodeDefinitions)
+            {
+                if(plateInfo.PredefinedBarcodes.ContainsKey(pair.Key))
+                {
+                    if(plateInfo.PredefinedBarcodes[pair.Key] != pair.Value)
+                    {
+                        errMsg += string.Format("板子:{0}中有{1}处与预定义不一致，请检查！", plateInfo.Name, pair.Key.AlphaInteger);
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -164,19 +207,44 @@ namespace BarcodeInputAssist
         void dataGridView_CellValidated(object sender, DataGridViewCellEventArgs e)
         {
             var cell = dataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            CellPosition cellPos = new CellPosition(cell.ColumnIndex,cell.RowIndex);
+            if (!curPlateInfo.IsWholePlate && cellPos.WellID > 48)
+                return;
+
+            string cellVal = cell.FormattedValue.ToString();
+            SetHint("");
+            if(curPlateInfo.PredefinedBarcodes.Count > 0)
+            {
+                if(curPlateInfo.PredefinedBarcodes.ContainsKey(cellPos))
+                {
+                    string expectedBarcode = curPlateInfo.PredefinedBarcodes[cellPos];
+                    if (expectedBarcode != cellVal)
+                    {
+                        cell.Style.BackColor = System.Drawing.Color.Pink;
+                        SetHint(string.Format("位于{0}处的条码错误，预期条码为:{1}", cellPos.AlphaInteger, curPlateInfo.PredefinedBarcodes[cellPos]));
+                        return;
+                    }
+                    else
+                    {
+                        cell.Style.BackColor = System.Drawing.Color.LightGreen;
+                    }
+                }
+            }
+
             Dictionary<string, string> map = new Dictionary<string, string>();
             map.Add("+", (string)cmbboxPositive.SelectedItem);
             map.Add("-", (string)cmbboxNegative.SelectedItem);
-            string cellVal = cell.FormattedValue.ToString();
             if (map.ContainsKey(cellVal))
                 cell.Value = map[cellVal];
+            
         }
 
 
-        private void SetHint(string s)
+        private void SetHint(string s, bool bRed = true)
         {
             txtHint.Text = s;
-            txtHint.Foreground = new SolidColorBrush(Colors.Red);
+            var color = bRed ? Colors.Red : Colors.Blue;
+            txtHint.Foreground = new SolidColorBrush(color);
         }
 
    
@@ -186,12 +254,11 @@ namespace BarcodeInputAssist
             dataGridView.ClearSelection();
             Utility.SaveDataGridView(dataGridView, curPlateInfo);
             curPlateInfo = (PlateInfo)lstboxPlates.SelectedItem;
+            txtCheckDoc.DataContext = curPlateInfo;
             Utility.InitDataGridView(dataGridView, curPlateInfo.BarcodeDefinitions.Count);
             Utility.UpdateDataGridView(dataGridView, curPlateInfo);
             Trace.WriteLine(string.Format("Selection changed to plate: {0}",curPlateInfo.Name));
         }
-
-
 
         #region menu events
         private void btnAddPlate_Click(object sender, RoutedEventArgs e)
@@ -249,10 +316,10 @@ namespace BarcodeInputAssist
                 return;
             }
           
-            PlateInfo newPlateInfo = new PlateInfo(newPlateName, queryNameForm.SelectedFormat);
+            PlateInfo newPlateInfo = new PlateInfo(newPlateName, queryNameForm.SelectedFormat,queryNameForm.PredefinedBarcodes);
             Trace.WriteLine(string.Format("Create new plate：{0}, assay: {1}", newPlateName, queryNameForm.SelectedFormat));
             plates.Add(newPlateInfo);
-
+            lstboxPlates.SelectedIndex = plates.Count - 1;
         }
 
         private void LoadPlate()
@@ -269,6 +336,7 @@ namespace BarcodeInputAssist
                 return;
             }
             plates.Add(newPlateInfo);
+            lstboxPlates.SelectedIndex = plates.Count - 1;
         }
 
         private void btnMerge_Click(object sender, RoutedEventArgs e)
@@ -281,9 +349,10 @@ namespace BarcodeInputAssist
             Trace.WriteLine("Save.");
             SetHint("");
             Utility.SaveDataGridView(dataGridView, curPlateInfo);
+            string errMsg = "";
             if ((bool)rdbMust.IsChecked)
             {
-                string errMsg = "";
+                errMsg = "";
                 bool bSeq = CheckPlatesSequential(ref errMsg);
                 if(!bSeq)
                 {
@@ -293,8 +362,11 @@ namespace BarcodeInputAssist
             }
             try
             {
-                WriteAllPlates2File();
-                SetHint("保存成功。");
+                bool bok = WriteAllPlates2File();
+                if(bok)
+                {
+                    SetHint("保存成功。",false);
+                }
             }
             catch(Exception ex)
             {
@@ -495,6 +567,7 @@ namespace BarcodeInputAssist
         }
         #endregion
 
+        #region set batch barcode
         private void btnSetBarcode_Click(object sender, RoutedEventArgs e)
         {
             lstAssays.SelectedIndex = -1;
@@ -520,7 +593,6 @@ namespace BarcodeInputAssist
                 dataGridView.Rows[cellPos.rowIndex].Cells[cellPos.colIndex].Value = prefix +(id - curWellID + 1).ToString();
             }
         }
-
         private void GetBarcodeSetting(ref int totalBarcodeCnt, ref string curBarcode)
         {
             curBarcode = txtStartBarcodeApproach1.Text; 
@@ -532,12 +604,146 @@ namespace BarcodeInputAssist
                             curBarcode,  totalBarcodeCnt,
                             CellPosition.GetDescription(curCell)));
         }
+        #endregion
+      
+        #region set check doc
 
-        private void btnLink_Click(object sender, RoutedEventArgs e)
+
+
+        private void btnBrowse_Click(object sender, RoutedEventArgs e)
         {
+            SetHint("");
+            if(curPlateInfo == null)
+            {
+                SetHint("未选中一块板子！");
+                return;
+            }
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.DefaultExt = ".doc";
+            dlg.Filter = "Word Files (*.doc)|*.doc";
+            var result = (bool)dlg.ShowDialog();
+            
+            if (!result)
+                return;
+
+            busyForm = new HeavyWork();
+            
+            filePath = dlg.FileName;
+            ThreadStart thStart = new ThreadStart(ReadPredefinedBarcodesInThread);
+            Thread th = new Thread(thStart);
+            th.Start();
+            busyForm.ShowDialog();
+
+
+            for (int i = 0; i < predefinedBarcodes.Count; i++)
+            {
+                var pair = predefinedBarcodes.ElementAt(i);
+                if (pair.Value.Contains("阳"))
+                    predefinedBarcodes[pair.Key] = "+";
+                else if (pair.Value.Contains("阴"))
+                    predefinedBarcodes[pair.Key] = "-";
+            }
+
+            if (predefinedBarcodes.Count > 0)
+            {
+                int positive = 0;
+                int negative = 0;
+                int ladder = 0;
+                int sample = 0;
+                ParseBarcodes(ref positive, ref negative, ref ladder, ref sample, predefinedBarcodes);
+                SetHint(string.Format("定义文件有样品{0}个,ladder{1}个,阳性对照{2}个,阴性对照{3}个", sample, ladder, positive, negative), false);
+                curPlateInfo.CheckDocPath = dlg.FileName;
+                curPlateInfo.PredefinedBarcodes = predefinedBarcodes;
+            }
+        }
+        private void ParseBarcodes(ref int positive, ref int negative, ref int ladder, ref int sample, Dictionary<CellPosition, string> predefinedBarcodes)
+        {
+            List<string> allBarcodes = predefinedBarcodes.Select(x => x.Value).ToList();
+
+            foreach (var barcode in allBarcodes)
+            {
+                string tmp = barcode;
+                tmp = tmp.Replace("\r", "");
+                tmp = tmp.Replace("\a", "");
+                if (tmp.Contains("阳性"))
+                {
+                    positive++;
+                }
+                else if (tmp.Contains("阴性"))
+                {
+                    negative++;
+                }
+                else if (tmp.Contains("ladder"))
+                {
+                    ladder++;
+                }
+                else if (tmp.Trim() != "")
+                {
+                    sample++;
+                }
+            }
 
         }
-       
+
+
+        public  void ReadPredefinedBarcodesInThread()
+        {
+            predefinedBarcodes = ReadPredefinedBarcodes(filePath);
+            this.Dispatcher.Invoke(new Action(() =>
+            { busyForm.Close(); }));
+            
+            
+        }
+     
+        private  Dictionary<CellPosition, string> ReadPredefinedBarcodes(string sDocFilePath)
+        {
+            var predefinedBarcodes = new Dictionary<CellPosition, string>();
+            List<Microsoft.Office.Interop.Word.Range> TablesRanges = new List<Microsoft.Office.Interop.Word.Range>();
+            Microsoft.Office.Interop.Word._Application wordApp = new Microsoft.Office.Interop.Word.Application();
+            Microsoft.Office.Interop.Word._Document doc = wordApp.Documents.OpenNoRepairDialog(FileName: sDocFilePath, ConfirmConversions: false, ReadOnly: true, AddToRecentFiles: false, NoEncodingDialog: true);
+
+            for (int iCounter = 1; iCounter <= doc.Tables.Count; iCounter++)
+            {
+                Microsoft.Office.Interop.Word.Range TRange = doc.Tables[iCounter].Range;
+                TablesRanges.Add(TRange);
+            }
+
+            CellPosition curPosition = new CellPosition(0);
+            for (int par = 1; par <= doc.Paragraphs.Count; par++)
+            {
+                Microsoft.Office.Interop.Word.Range r = doc.Paragraphs[par].Range;
+                foreach (Microsoft.Office.Interop.Word.Range range in TablesRanges)
+                {
+                    if (r.Start >= range.Start && r.Start <= range.End)
+                    {
+                        string text = r.Text.Trim();
+                        if (text.Length == 3 && char.IsLetter(text[0]) && char.IsDigit(text[1]) && char.IsDigit(text[2]))
+                        {
+                            curPosition = new CellPosition(text);
+                            continue;
+                        }
+                        string org = "";
+                        if (predefinedBarcodes.ContainsKey(curPosition))
+                            org = predefinedBarcodes[curPosition];
+                        predefinedBarcodes[curPosition] = org + text;
+                    }
+                }
+            }
+            doc.Close(Type.Missing, Type.Missing, Type.Missing);
+            wordApp.Quit(Type.Missing);
+            for (int i = 0; i < predefinedBarcodes.Count; i++)
+            {
+                var pair = predefinedBarcodes.ElementAt(i);
+                string org = pair.Value;
+                org = org.Replace("\r", "");
+                org = org.Replace("\a", "");
+                org = org.Replace("\n", "");
+                predefinedBarcodes[pair.Key] = org;
+            }
+            predefinedBarcodes = predefinedBarcodes.Where(x => x.Value != "").ToDictionary(x => x.Key, x => x.Value);
+            return predefinedBarcodes;
+        }
+        #endregion
     }
 
 

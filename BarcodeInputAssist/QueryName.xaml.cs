@@ -46,40 +46,59 @@ namespace BarcodeInputAssist
 
         private void btnBrowse_Click(object sender, RoutedEventArgs e)
         {
+            PredefinedBarcodes = new Dictionary<CellPosition, string>();
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.DefaultExt = ".doc";
             dlg.Filter = "Word Files (*.doc)|*.doc"; 
             var result = (bool)dlg.ShowDialog();
             if (!result)
                 return;
-            txtCheckList.Text = dlg.FileName;
+            
             ReadPredefinedBarcodes(dlg.FileName);
             int positive = 0;
             int negative = 0;
             int ladder = 0;
             int sample = 0;
             ParseBarcodes(ref positive, ref negative, ref ladder, ref sample);
-            SetHint(string.Format("定义文件有样品{0}个,ladder{1}个,阳性对照{2}个,阴性对照{3}个", sample, ladder, positive, negative));
+            SetHint(string.Format("定义文件有样品{0}个,ladder{1}个,阳性对照{2}个,阴性对照{3}个", sample, ladder, positive, negative),false);
+            for (int i = 0; i < PredefinedBarcodes.Count; i++ )
+            {
+                var pair = PredefinedBarcodes.ElementAt(i);
+                if (pair.Value.Contains("阳"))
+                    PredefinedBarcodes[pair.Key] = "+";
+                else if( pair.Value.Contains("阴"))
+                    PredefinedBarcodes[pair.Key] = "-";
+            }
+
+                if (PredefinedBarcodes.Count > 0)
+                {
+                    //txtCheckList.Text = dlg.FileName;
+                    CheckListPath = dlg.FileName;
+                }
         }
 
         private void ParseBarcodes(ref int positive, ref int negative, ref int ladder, ref int sample)
         {
             List<string> allBarcodes = PredefinedBarcodes.Select(x => x.Value).ToList();
+            
             foreach(var barcode in allBarcodes)
             {
-                if(barcode.Contains("阳性"))
+                string tmp = barcode;
+                tmp = tmp.Replace("\r", "");
+                tmp = tmp.Replace("\a", "");
+                if (tmp.Contains("阳性"))
                 {
                     positive++;
                 }
-                else if( barcode.Contains("阴性"))
+                else if (tmp.Contains("阴性"))
                 {
                     negative++;
                 }
-                else if( barcode.Contains("ladder"))
+                else if (tmp.Contains("ladder"))
                 {
-                    negative++;
+                    ladder++;
                 }
-                else if( barcode.Trim() != "")
+                else if (tmp.Trim() != "")
                 {
                     sample++;
                 }
@@ -122,6 +141,14 @@ namespace BarcodeInputAssist
             }
             doc.Close(Type.Missing, Type.Missing, Type.Missing);
             wordApp.Quit(Type.Missing);
+            for(int i = 0; i< PredefinedBarcodes.Count;i++)
+            {
+                var pair = PredefinedBarcodes.ElementAt(i);
+                string org = pair.Value;
+                org = org.Replace("\r\a", "");
+                org = org.Replace("\r\n", "");
+                PredefinedBarcodes[pair.Key] = org;
+            }
         }
 
         private void btnConfirm_Click(object sender, RoutedEventArgs e)
@@ -150,12 +177,14 @@ namespace BarcodeInputAssist
             this.Close();
         }
 
-        private void SetHint(string s)
+        private void SetHint(string s,bool bRed = true)
         {
             txtHint.Content = s;
-            txtHint.Foreground = new SolidColorBrush(Colors.Red);
+            var color = bRed ? Colors.Red : Colors.Blue;
+            txtHint.Foreground = new SolidColorBrush(color);
         }
 
+        public string CheckListPath { get; set; }
         public FormattedHeader SelectedFormat { get; set; }
         public string PlateName { get; set; }
         public string CheckDocPath { get; set; }

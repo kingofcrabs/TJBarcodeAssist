@@ -36,6 +36,11 @@ namespace BarcodeInputAssist
                 foreach (DataGridViewCell cell in row.Cells)
                 {
                     CellPosition cellPos = new CellPosition(cell.ColumnIndex, cell.RowIndex);
+                    if(!curPlateInfo.IsWholePlate)
+                    {
+                        if (cellPos.WellID > 48)
+                            continue;
+                    }
                     string sBarcode = cell.Value.ToString();
                     curPlateInfo.BarcodeDefinitions[cellPos] = sBarcode;
                 }

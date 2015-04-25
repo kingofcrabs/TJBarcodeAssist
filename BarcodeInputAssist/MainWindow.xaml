@@ -10,6 +10,7 @@
     </Window.CommandBindings>
     <Grid Name="mainGrid">
 
+       
         <Grid.Resources>
             <src:String2ColorConverter x:Key="s2c"/>
         </Grid.Resources>
@@ -25,6 +26,7 @@
             <ColumnDefinition Width="5*"/>
             <ColumnDefinition Width="220"/>
         </Grid.ColumnDefinitions>
+       
         <Menu Height="24" Grid.Column="2" HorizontalAlignment="Right" Name="menu1"  VerticalAlignment="Top" Width="48" Margin="0,1,0,0">
             <MenuItem Header="帮助" FontFamily="SimSun" FontSize="16" >
                 <MenuItem Header="关于" Command="Help"/>
@@ -78,6 +80,7 @@
                 </StackPanel>
             </GroupBox>
 
+
         </StackPanel>
         <Label Grid.Row="1" Content="板名：" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="58"/>
         <ListBox Margin="2,0,1,0"  Grid.Row="2" HorizontalAlignment="Stretch" Name="lstboxPlates" 
@@ -98,18 +101,21 @@
         <ListBox Margin="2,30,1,0"  Grid.Row="3" HorizontalAlignment="Stretch" Name="lstAssays"  SelectionChanged="lstAssays_SelectionChanged"
                  VerticalAlignment="Stretch" ItemsSource="{Binding}"/>
         <Label Content="具体定义：" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Height="28" Width="90"/>
+        <Label Content="对应样品记录:" Grid.Row="4" HorizontalAlignment="Right" VerticalAlignment="Top" Grid.Column="1" Height="28" Margin="0,10,519,0"/>
+        <TextBox Name="txtCheckDoc" Text="{Binding Path=CheckDocPath,Mode=TwoWay}" IsReadOnly="True" Grid.Column="1" HorizontalAlignment="Right"  Width="406" Margin="0,10,108,76" Grid.Row="4" />
         <Grid Grid.Column="1" Grid.Row="2" Grid.RowSpan="2">
             <wfi:WindowsFormsHost>
                 <wf:DataGridView x:Name="dataGridView" AllowUserToAddRows="False"  AllowUserToResizeRows="False" AllowUserToResizeColumns="True"/>
             </wfi:WindowsFormsHost>
         </Grid>
+        
         <Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="5" Name="gridLog">
             <Grid.RowDefinitions>
-            <RowDefinition Height="80"/>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="3*"/>
-            <RowDefinition Height="4*"/>
-            <RowDefinition Height="1.6*"/>
+                <RowDefinition Height="80"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="3*"/>
+                <RowDefinition Height="4*"/>
+                <RowDefinition Height="1.6*"/>
             </Grid.RowDefinitions>
             <Label Content="条码设置:" Grid.Row ="1"/>
             <StackPanel Name="approach1"  Grid.Row="2" Margin="0,5,0,0">
@@ -129,7 +135,8 @@
             <Label Name="lblLog" Content="日志:" Grid.Row="3"/>
             <TextBox Margin="5,30,0,0" Name ="txtLog" Grid.Row="3"/>
         </Grid>
-        <Label Grid.Row="4" Content="提示：" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="58"/>
-        <TextBox HorizontalAlignment="Stretch" Name="txtHint"  Margin="8,31,3,4" Grid.Row="4" TextWrapping="Wrap" Text="" VerticalAlignment="Stretch" Grid.ColumnSpan="2"/>
+        <Label Grid.Row="4" Content="提示：" HorizontalAlignment="Left" VerticalAlignment="Top" Height="28" Width="58" Margin="0,10,0,0"/>
+        <TextBox HorizontalAlignment="Stretch" Name="txtHint"  Margin="8,52,3,4" Grid.Row="4" TextWrapping="Wrap" Text="" VerticalAlignment="Stretch" Grid.ColumnSpan="2"/>
+        <Button Content="浏览" Grid.Column="1" Name="btnBrowse" Click="btnBrowse_Click" HorizontalAlignment="Right" Margin="0,10,5,0" Grid.Row="4" VerticalAlignment="Top" Width="98" Height="37"/>
     </Grid>
 </Window>

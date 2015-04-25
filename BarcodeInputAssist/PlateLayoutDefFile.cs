@@ -87,7 +87,7 @@ namespace BarcodeInputAssist
             {
                 bMerged = strs[7].Contains(strings.merged);
             }
-            plateInfo = new PlateInfo(plateName,null, bMerged);
+            plateInfo = new PlateInfo(plateName,null,null, bMerged);
             plateInfo.PlateDescription = generalInfo;
         }
 
@@ -100,6 +100,7 @@ namespace BarcodeInputAssist
             allLines.Add("");
             allLines.Add(sampleHeader);
             plateInfo.BarcodeDefinitions = plateInfo.BarcodeDefinitions.OrderBy(x => Convert(x.Key)).ToDictionary(x=>x.Key,x=>x.Value);
+            string defaultText = "\t\t\t\t\t"+plateInfo.DefaultComment;
             for (int i = 0; i < 96; i++ )
             {
                 CellPosition cellPos = new CellPosition(i);
@@ -109,17 +110,24 @@ namespace BarcodeInputAssist
                     string well = cellPos.AlphaInteger + "\t";
                     string sampleType = GetSampleType(barcode);
                     string line = well;
-                    if( barcode != "")
+                    if (barcode != "")
                         line += barcode + "\t" + plateInfo.SampleDescription + "\t" + sampleType;
+                    else
+                        line = GetDefault(cellPos,defaultText);
                     allLines.Add(line);
                 }
                 else
                 {
-                    allLines.Add(cellPos.AlphaInteger);
+                    allLines.Add(GetDefault(cellPos, defaultText));
                 }
                 
             }
             File.WriteAllLines(sFile, allLines);
+        }
+
+        private string GetDefault(CellPosition cellPos, string defaultText)
+        {
+            return cellPos.AlphaInteger + defaultText;
         }
 
         private int Convert(CellPosition cellPosition)
@@ -145,7 +153,6 @@ namespace BarcodeInputAssist
                     break;
                 default:
                     break;
-                      
             }
             return sampleType;
         }

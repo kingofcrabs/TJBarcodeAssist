@@ -64,6 +64,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Folder.cs" />
+    <Compile Include="HeavyWork.xaml.cs">
+      <DependentUpon>HeavyWork.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HelpForm.xaml.cs">
       <DependentUpon>HelpForm.xaml</DependentUpon>
     </Compile>
@@ -76,6 +79,10 @@
     </Compile>
     <Compile Include="TraceListener.cs" />
     <Compile Include="Utility.cs" />
+    <Page Include="HeavyWork.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="HelpForm.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -184,6 +191,9 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="history.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
