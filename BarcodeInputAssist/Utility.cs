@@ -49,6 +49,18 @@ namespace BarcodeInputAssist
         }
 
 
+        static public List<FormattedHeader> ReadConfig()
+        {
+            List<FormattedHeader> formattedHeaders = new List<FormattedHeader>();
+            string configFile = FolderHelper.GetConfigFolder() + "fileDefinition.txt";
+            string[] allLines = File.ReadAllLines(configFile);
+            for (int i = 1; i < allLines.Length; i++)
+            {
+                formattedHeaders.Add(new FormattedHeader(allLines[i], true));
+            }
+            return formattedHeaders;
+        }
+
         static public void InitDataGridView(DataGridView dataGridView, int sampleCount)
         {
             dataGridView.Columns.Clear();

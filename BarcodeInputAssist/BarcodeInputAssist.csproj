@@ -77,6 +77,9 @@
     <Compile Include="QueryName.xaml.cs">
       <DependentUpon>QueryName.xaml</DependentUpon>
     </Compile>
+    <Compile Include="QueryType.xaml.cs">
+      <DependentUpon>QueryType.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TraceListener.cs" />
     <Compile Include="Utility.cs" />
     <Page Include="HeavyWork.xaml">
@@ -105,6 +108,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="QueryName.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="QueryType.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -158,6 +165,7 @@
     <Resource Include="images\scan.jpg" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="images\split.png" />
     <Resource Include="scan.ico" />
   </ItemGroup>
   <ItemGroup>

@@ -9,8 +9,6 @@
         <CommandBinding Command="Help" Executed="CommandHelp_Executed" CanExecute="CommandHelp_CanExecute"/>
     </Window.CommandBindings>
     <Grid Name="mainGrid">
-
-       
         <Grid.Resources>
             <src:String2ColorConverter x:Key="s2c"/>
         </Grid.Resources>
@@ -39,6 +37,7 @@
                     <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">添加</TextBlock>
                 </StackPanel>
             </Button>
+         
             <Button Name="btnOpen" Click="btnOpen_Click"  ToolTip="打开定义文件.">
                 <StackPanel Orientation="Vertical" >
                     <Image Source="/Images/open.jpg"  Height="55"/>
@@ -49,6 +48,12 @@
                 <StackPanel Orientation="Vertical" >
                     <Image Source="/Images/merge.png"  Height="55"/>
                     <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">合并</TextBlock>
+                </StackPanel>
+            </Button>
+            <Button Name="btnSplit" Click="btnSplit_Click"  ToolTip="切割板子.">
+                <StackPanel Orientation="Vertical">
+                    <Image Source="/Images/split.png" Height="55" />
+                    <TextBlock FontSize="16" TextAlignment="Center" Margin="3,0,0,0">切割</TextBlock>
                 </StackPanel>
             </Button>
             <Button Name="btnSave" Click="btnSave_Click" ToolTip="保持到文件.">

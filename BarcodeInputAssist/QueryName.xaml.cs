@@ -23,23 +23,12 @@ namespace BarcodeInputAssist
             :this()
         {
             this.names = names;
-            FormattedHeaders = ReadConfig();
+            FormattedHeaders = Utility.ReadConfig();
             lvFormats.ItemsSource = FormattedHeaders;
             lvFormats.SelectedIndex = 0;
             txtPlateName.Focus();
         }
 
-        private List<FormattedHeader> ReadConfig()
-        {
-            List<FormattedHeader> formattedHeaders = new List<FormattedHeader>();
-            string configFile = FolderHelper.GetConfigFolder() + "fileDefinition.txt";
-            string[] allLines = File.ReadAllLines(configFile);
-            for (int i = 1; i < allLines.Length; i++ )
-            {
-                formattedHeaders.Add(new FormattedHeader(allLines[i],true));
-            }
-            return formattedHeaders;
-        }
 
         public List<FormattedHeader> FormattedHeaders{ get; set; }
         public Dictionary<CellPosition, string> PredefinedBarcodes { get; set; }

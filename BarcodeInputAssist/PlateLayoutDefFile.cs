@@ -20,6 +20,7 @@ namespace BarcodeInputAssist
                                    };
         public const string plateDef = "\tHID\t36\tPOP4\t96\ttjbh";
         const string sampleHeader = "Well	Sample Name	Assay	Results Group	File Name Convention	Sample Type	User Defined Field 1	User Defined Field 2	User Defined Field 3	User Defined Field 4	User Defined Field 5	Comments";
+        string assayName = "";
         public PlateInfo Read(string sFile)
         {
             var lines = File.ReadLines(sFile);
@@ -27,6 +28,7 @@ namespace BarcodeInputAssist
             string generalInfo = lines.First();
             PlateInfo plateInfo;
             ParseGeneral(generalInfo, out plateInfo);
+            
             lines = lines.Skip(1);
             bool setSampleDesc = false;
             foreach(string line in lines)
@@ -47,7 +49,24 @@ namespace BarcodeInputAssist
                 
                 ParseSample(line, plateInfo);
             }
-
+            if (plateInfo.FileFormat == null)
+            {
+                if( assayName != "")
+                {
+                    var formatHeaders = Utility.ReadConfig();
+                    plateInfo.FileFormat = formatHeaders.Where(x => x.Assay == assayName).First();
+                }
+                else
+                {
+                    //let user select header
+                    QueryType queryTypeForm = new QueryType();
+                    queryTypeForm.ShowDialog();
+                    if (queryTypeForm.SelectedFormat == null)
+                        throw new Exception("未能设置文件类型！");
+                    plateInfo.FileFormat = queryTypeForm.SelectedFormat;
+                }
+                
+            }
             return plateInfo;
         }
 
@@ -63,6 +82,11 @@ namespace BarcodeInputAssist
             {
                 if (cellPosition.WellID > 48)
                     return;
+            }
+            string sAssay = strs[2];
+            if(sAssay != "")
+            {
+                assayName = sAssay;
             }
             plateInfo.BarcodeDefinitions[cellPosition] = sampleName;
         }

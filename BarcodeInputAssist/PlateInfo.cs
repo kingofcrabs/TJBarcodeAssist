@@ -10,16 +10,27 @@ namespace BarcodeInputAssist
         string name;
         bool wholePlate;
         string checkDocPath;
-        FormattedHeader fileformat;
+        private FormattedHeader fileformat;
+        public FormattedHeader FileFormat
+        {
+            get
+            {
+                return fileformat;
+            }
+            set
+            {
+                fileformat = value;
+                if(fileformat != null)
+                    SampleDescription = fileformat.Assay + "\t" + fileformat.ResultsGroup + "\t" + fileformat.FileNameConvention;
+            }
+        }
         Dictionary<CellPosition,string> barcodeDefinitions = new Dictionary<CellPosition,string>();
         public PlateInfo(string plateName,FormattedHeader selectedFormat, Dictionary<CellPosition,string> predefinedBarcodes, bool wholePlate = false)
         {
             name = plateName;
             string merged = wholePlate ? "\t\tmerged" : "";
-            fileformat = selectedFormat;
+            FileFormat = selectedFormat;
             PlateDescription = plateName + PlateLayoutDefFile.plateDef + merged;
-            if(selectedFormat != null)
-                SampleDescription = selectedFormat.Assay +"\t" + selectedFormat.ResultsGroup + "\t" + selectedFormat.FileNameConvention;
             this.wholePlate = wholePlate;
             int wellCount = wholePlate ? 96 : 48;
             if (predefinedBarcodes == null)
@@ -122,7 +133,7 @@ namespace BarcodeInputAssist
         }
 
 
-        public void CopyFrom(PlateInfo srcPlate, bool copy2FirstHalf)
+        public void MergeFrom(PlateInfo srcPlate, bool copy2FirstHalf)
         {
             for(int i = 0; i<48;i++)
             {
@@ -130,6 +141,34 @@ namespace BarcodeInputAssist
                 CellPosition dstCellPos = copy2FirstHalf ? srcCellPos : new CellPosition(i + 48);
 
                 if(srcPlate.BarcodeDefinitions.ContainsKey(srcCellPos))
+                {
+                    barcodeDefinitions[dstCellPos] = srcPlate.BarcodeDefinitions[srcCellPos];
+                }
+            }
+        }
+
+        public int MaxWellID
+        {
+            get
+            {
+                return IsWholePlate ? 96 : 48;
+            }
+        }
+
+        internal void SplitFrom(PlateInfo srcPlate, bool firstHalf)
+        {
+            int start = 0;
+            int end = 48;
+            if(!firstHalf)
+            {
+                start = 48;
+                end = 96;
+            }
+            for (int i = start; i < end; i++)
+            {
+                CellPosition srcCellPos = new CellPosition(i);
+                CellPosition dstCellPos = new CellPosition(i-start);
+                if (srcPlate.BarcodeDefinitions.ContainsKey(srcCellPos))
                 {
                     barcodeDefinitions[dstCellPos] = srcPlate.BarcodeDefinitions[srcCellPos];
                 }

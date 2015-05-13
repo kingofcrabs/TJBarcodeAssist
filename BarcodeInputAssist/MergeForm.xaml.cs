@@ -69,8 +69,8 @@ namespace BarcodeInputAssist
             FormattedHeader formattedHeader = new FormattedHeader(firstPlate.SampleDescription);
             MergedPlate = new PlateInfo(firstPlate.Name + "_" + secondPlate.Name, formattedHeader,null, true);
            
-            MergedPlate.CopyFrom(firstPlate, true);
-            MergedPlate.CopyFrom(secondPlate, false);
+            MergedPlate.MergeFrom(firstPlate, true);
+            MergedPlate.MergeFrom(secondPlate, false);
             this.DialogResult = true;
             this.Close();
 
