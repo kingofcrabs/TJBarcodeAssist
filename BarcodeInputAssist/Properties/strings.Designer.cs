@@ -70,7 +70,7 @@ namespace BarcodeInputAssist.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 0.07.
+        ///   Looks up a localized string similar to 0.09.
         /// </summary>
         internal static string version {
             get {

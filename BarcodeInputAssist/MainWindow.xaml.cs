@@ -439,7 +439,10 @@ namespace BarcodeInputAssist
             //var cellPositions = plateInfo.BarcodeDefinitions.Keys.ToList();
             var cellPositions = plateInfo.BarcodeDefinitions.Where(x => x.Value != "").Select(x => x.Key).ToList();
             var wellIDs = cellPositions.Select(x => x.WellID);
+            if (wellIDs.Count() == 0)
+                return true;
             HashSet<int> allIDs = new HashSet<int>(wellIDs);
+            
             int minWellID = wellIDs.Min();
             int maxWellID = wellIDs.Max();
             for(int id = minWellID; id < maxWellID; id++)
@@ -512,9 +515,12 @@ namespace BarcodeInputAssist
             int totalY = (int)(yUnit * 8.5);
             int cols = cnt;
             int rows = 8;
+            int firstLineHeight = 30;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
             int fontSize = int.Parse(ConfigurationManager.AppSettings["PrintFontSize"]);
             System.Drawing.Font font1 = new System.Drawing.Font("SimHei", fontSize);
+
+        
             for (int y = 0; y < rows; y++)
             {
                 for (int x = 0; x < cols; x++)
@@ -524,7 +530,7 @@ namespace BarcodeInputAssist
                         continue;
 
                     float startX = (float)(x * xUint + border);
-                    float startY = (float)((y + 0.5) * yUnit + border);
+                    float startY = (float)((y + 0.5) * yUnit + border + firstLineHeight);
 
                     string content = curPlateInfo.BarcodeDefinitions[cellPos];
                     System.Drawing.PointF startPt = new System.Drawing.PointF(startX, (float)(startY + yUnit * 0.1));
@@ -532,6 +538,13 @@ namespace BarcodeInputAssist
                         font1, System.Drawing.Brushes.Black,
                         new System.Drawing.RectangleF(startPt, new System.Drawing.SizeF(xUint, yUnit)));
 
+                    if(x==0 && y ==0)
+                    {
+                        g.DrawString("板名：________________检验时间：______________检验人：______________复核人：______________", font1, System.Drawing.Brushes.Black,
+                          new System.Drawing.RectangleF(new  System.Drawing.PointF(0,border), new System.Drawing.SizeF(1000, yUnit)));
+
+
+                    }
                     //String, Font, Brush, RectangleF, StringFormat)
                 }
             }
@@ -544,11 +557,11 @@ namespace BarcodeInputAssist
                 {
                     g.DrawString(string.Format("{0:D2}", x + 1), font1,
                         System.Drawing.Brushes.Black,
-                        new System.Drawing.PointF((float)xStart + xUint * 0.2f, border + yUnit * 0.2f));
+                        new System.Drawing.PointF((float)xStart + xUint * 0.2f,firstLineHeight+ border + yUnit * 0.2f));
                 }
                 g.DrawLine(System.Drawing.Pens.Black,
-                    new System.Drawing.Point(xStart, border),
-                    new System.Drawing.Point(xStart, totalY + border));
+                    new System.Drawing.Point(xStart, firstLineHeight + border),
+                    new System.Drawing.Point(xStart, totalY + border + firstLineHeight));
             }
 
             //横线
@@ -557,6 +570,7 @@ namespace BarcodeInputAssist
                 int yStart = (int)((y - 0.5) * yUnit + border);
                 if (y == 0)
                     yStart = border;
+                yStart += firstLineHeight;
                 if (y >= 1 && y < rows + 1)
                 {
                     g.DrawString(string.Format("{0}", (char)(y - 1 + 'A')), font1,
@@ -568,17 +582,17 @@ namespace BarcodeInputAssist
                     new System.Drawing.Point(totalX + border, yStart));
             }
             g.DrawLine(System.Drawing.Pens.Black,
-                    new System.Drawing.Point(0, border),
-                    new System.Drawing.Point(0, totalY + border));
+                    new System.Drawing.Point(0, firstLineHeight + border),
+                    new System.Drawing.Point(0, totalY + border + firstLineHeight));
             g.DrawLine(System.Drawing.Pens.Black,
-                  new System.Drawing.Point(0, totalY + border),
-                  new System.Drawing.Point(totalX + border, totalY + border));
+                  new System.Drawing.Point(0, totalY + border + firstLineHeight),
+                  new System.Drawing.Point(totalX + border, totalY + border + firstLineHeight));
         }
 
         private int GetFitBMPHeight()
         {
             int length = curPlateInfo.BarcodeDefinitions.Max(x => x.Value.Length);
-            return (int)(border + 8.5 * yUnit + 10);
+            return (int)(border + 8.5 * yUnit + 40);
         }
 
         private int GetFitBMPWidth()
