@@ -97,47 +97,47 @@ namespace BarcodeInputAssist
 
         private void ReadPredefinedBarcodes(string sDocFilePath)
         {
-            List<Microsoft.Office.Interop.Word.Range> TablesRanges = new List<Microsoft.Office.Interop.Word.Range>();
-            Microsoft.Office.Interop.Word._Application wordApp = new Microsoft.Office.Interop.Word.Application();
-            Microsoft.Office.Interop.Word._Document doc = wordApp.Documents.OpenNoRepairDialog(FileName: sDocFilePath, ConfirmConversions: false, ReadOnly: true, AddToRecentFiles: false, NoEncodingDialog: true);
+            //List<Microsoft.Office.Interop.Word.Range> TablesRanges = new List<Microsoft.Office.Interop.Word.Range>();
+            //Microsoft.Office.Interop.Word._Application wordApp = new Microsoft.Office.Interop.Word.Application();
+            //Microsoft.Office.Interop.Word._Document doc = wordApp.Documents.OpenNoRepairDialog(FileName: sDocFilePath, ConfirmConversions: false, ReadOnly: true, AddToRecentFiles: false, NoEncodingDialog: true);
             
-            for (int iCounter = 1; iCounter <= doc.Tables.Count; iCounter++)
-            {
-                Microsoft.Office.Interop.Word.Range TRange = doc.Tables[iCounter].Range;
-                TablesRanges.Add(TRange);
-            }
+            //for (int iCounter = 1; iCounter <= doc.Tables.Count; iCounter++)
+            //{
+            //    Microsoft.Office.Interop.Word.Range TRange = doc.Tables[iCounter].Range;
+            //    TablesRanges.Add(TRange);
+            //}
             
-            CellPosition curPosition = new CellPosition(0);
-            for (int par = 1; par <= doc.Paragraphs.Count; par++)
-            {
-                Microsoft.Office.Interop.Word.Range r = doc.Paragraphs[par].Range;
-                foreach (Microsoft.Office.Interop.Word.Range range in TablesRanges)
-                {
-                    if (r.Start >= range.Start && r.Start <= range.End)
-                    {
-                        string text = r.Text.Trim();
-                        if (text.Length == 3 && char.IsLetter(text[0]) && char.IsDigit(text[1]) && char.IsDigit(text[2]))
-                        {
-                            curPosition = new CellPosition(text);
-                            continue;
-                        }
-                        string org = "";
-                        if (PredefinedBarcodes.ContainsKey(curPosition))
-                            org = PredefinedBarcodes[curPosition];
-                        PredefinedBarcodes[curPosition] = org + text;
-                    }
-                }
-            }
-            doc.Close(Type.Missing, Type.Missing, Type.Missing);
-            wordApp.Quit(Type.Missing);
-            for(int i = 0; i< PredefinedBarcodes.Count;i++)
-            {
-                var pair = PredefinedBarcodes.ElementAt(i);
-                string org = pair.Value;
-                org = org.Replace("\r\a", "");
-                org = org.Replace("\r\n", "");
-                PredefinedBarcodes[pair.Key] = org;
-            }
+            //CellPosition curPosition = new CellPosition(0);
+            //for (int par = 1; par <= doc.Paragraphs.Count; par++)
+            //{
+            //    Microsoft.Office.Interop.Word.Range r = doc.Paragraphs[par].Range;
+            //    foreach (Microsoft.Office.Interop.Word.Range range in TablesRanges)
+            //    {
+            //        if (r.Start >= range.Start && r.Start <= range.End)
+            //        {
+            //            string text = r.Text.Trim();
+            //            if (text.Length == 3 && char.IsLetter(text[0]) && char.IsDigit(text[1]) && char.IsDigit(text[2]))
+            //            {
+            //                curPosition = new CellPosition(text);
+            //                continue;
+            //            }
+            //            string org = "";
+            //            if (PredefinedBarcodes.ContainsKey(curPosition))
+            //                org = PredefinedBarcodes[curPosition];
+            //            PredefinedBarcodes[curPosition] = org + text;
+            //        }
+            //    }
+            //}
+            //doc.Close(Type.Missing, Type.Missing, Type.Missing);
+            //wordApp.Quit(Type.Missing);
+            //for(int i = 0; i< PredefinedBarcodes.Count;i++)
+            //{
+            //    var pair = PredefinedBarcodes.ElementAt(i);
+            //    string org = pair.Value;
+            //    org = org.Replace("\r\a", "");
+            //    org = org.Replace("\r\n", "");
+            //    PredefinedBarcodes[pair.Key] = org;
+            //}
         }
 
         private void btnConfirm_Click(object sender, RoutedEventArgs e)
